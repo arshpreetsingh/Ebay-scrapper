@@ -47,6 +47,17 @@ def run(opts):
 	except ConnectionError as e:
 		print(e)
 		print(e.response.dict())
+def run2(opts):
+	try:
+		api = finding(debug=opts.debug,appid=opts.appid,config_file=opts.yaml)
+		
+		response = api.execute('findItemsByProduct',
+		'<productId type="RefrenceID">53039031</productId><paginationInput><entriesPerPage>1</entriesPerPage></paginationInput>')
+		
+		dump(api)
+	except ConnectionError as e:
+		print(e)
+		print(e.response.dict())
 
 if __name__ == "__main__":
 	print("Finding samples for SDK version %s" % ebaysdk.get_version())
