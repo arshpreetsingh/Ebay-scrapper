@@ -1,6 +1,8 @@
-
+import json
+import csv
 import os
 import sys
+from ebaysdk.soa.finditem import Connection as FindItem
 from optparse import OptionParser
 sys.path.insert(0, '%s/../' % os.path.dirname(__file__))
 from common import dump
@@ -21,40 +23,44 @@ def init_options():
 	dest="appid", default=None,
 	help="Specifies the eBay application id to use.")
 	(opts, args) = parser.parse_args()
+	parser.add_option("-c","--consumer_id",dest="consumer_id",
+	default="arshp.us2015",help="")
+	
+	(opts,args)= parser.parse_args()
+		
 	return opts, args
 
 def run(opts):
 	try:
 		api = finding(debug=opts.debug, appid=opts.appid,
 		config_file=opts.yaml, warnings=True)
+		
 		api_request = {
-		'keywords': u'Electronics',
-		'itemFilter': [
-		{'name': 'Condition',
-		'value': 'Used'},
-		{'name': 'LocatedIn',
-		'value': 'GB'},
-		],
+		'keywords': u'Motors',
 		'affiliate': {'trackingId': 5337368933},
 		'affiliate':{'networkId':902099},
 		'affiliate':{'customId':200},
 		
-		'sortOrder': 'CountryDescending',
 		}
-		response = api.execute('findItemsAdvanced', api_request)
-		dump(api)
+		
+		retval = api.execute('findItemsAdvanced', api_request)
+		error=api.error()
+		if not api.error():
+			items=api.response.reply.searchResult.item
+			for item_ in items:
+	
+				print item_.title
+		                print item_.galleryURL
+				print item_.viewItemURL
+				print dir(item_)
+		mywriter = csv.writer(open("ebaytest.csv","wb"))
+		head = ("Title","Image","ItemURL")
+		mywriter.writerow(head)
+		for i in range(0,len(items)):
+			mywriter.writerow([items[i].title,items[i].galleryURL,items[i].viewItemURL])					
+			dump(api)
 
-	except ConnectionError as e:
-		print(e)
-		print(e.response.dict())
-def run2(opts):
-	try:
-		api = finding(debug=opts.debug,appid=opts.appid,config_file=opts.yaml)
 		
-		response = api.execute('findItemsByProduct',
-		'<productId type="RefrenceID">53039031</productId><paginationInput><entriesPerPage>1</entriesPerPage></paginationInput>')
-		
-		dump(api)
 	except ConnectionError as e:
 		print(e)
 		print(e.response.dict())
@@ -62,6 +68,5 @@ def run2(opts):
 if __name__ == "__main__":
 	print("Finding samples for SDK version %s" % ebaysdk.get_version())
 	(opts, args) = init_options()
-
 	run(opts)
 
